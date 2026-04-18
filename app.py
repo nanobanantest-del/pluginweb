@@ -14,31 +14,41 @@ def index():
 
 @app.route('/compile', methods=['POST'])
 def compile_plugin():
-    # Form se data lena
+    # Naye form se saara data lena
     plugin_name = request.form.get('plugin_name').replace(" ", "")
     package_name = request.form.get('package_name')
+    main_class = request.form.get('main_class') # Ab main class ka naam exact pata hoga
+    api_type = request.form.get('api_type')
     api_version = request.form.get('api_version')
+    java_version = request.form.get('java_version')
+    plugin_yml_content = request.form.get('plugin_yml_content') # Universal YAML
     java_files = request.files.getlist('java_files')
 
-    if not plugin_name or not package_name or not java_files:
-        return "Missing details!", 400
+    if not plugin_name or not package_name or not java_files or not main_class:
+        return "Missing important details!", 400
 
-    # Ek unique folder ID banana taki alag-alag builds mix na hon
     job_id = str(uuid.uuid4())[:8]
     base_dir = os.path.join(BUILD_DIR, f"{plugin_name}_{job_id}")
     
-    # Maven ka standard folder structure banana
     java_dir = os.path.join(base_dir, "src", "main", "java", *package_name.split('.'))
     resources_dir = os.path.join(base_dir, "src", "main", "resources")
     os.makedirs(java_dir, exist_ok=True)
     os.makedirs(resources_dir, exist_ok=True)
 
-    # Upload hui .java files ko sahi jagah save karna
+    # .java files save karna (Multiple files support)
     for file in java_files:
         if file.filename.endswith('.java'):
             file.save(os.path.join(java_dir, file.filename))
 
-    # pom.xml file generate karna (Updated with Java 17 properties)
+    # Spigot aur Paper ke liye alag Maven repo logic
+    if api_type == "paper":
+        repo_id, repo_url = "papermc", "https://repo.papermc.io/repository/maven-public/"
+        dep_group, dep_artifact = "io.papermc.paper", "paper-api"
+    else:
+        repo_id, repo_url = "spigot-repo", "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
+        dep_group, dep_artifact = "org.spigotmc", "spigot-api"
+
+    # Universal pom.xml generate karna
     pom_content = f"""<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
       <modelVersion>4.0.0</modelVersion>
       <groupId>{package_name}</groupId>
@@ -46,45 +56,43 @@ def compile_plugin():
       <version>1.0</version>
       
       <properties>
-          <maven.compiler.source>17</maven.compiler.source>
-          <maven.compiler.target>17</maven.compiler.target>
+          <maven.compiler.source>{java_version}</maven.compiler.source>
+          <maven.compiler.target>{java_version}</maven.compiler.target>
           <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       </properties>
 
       <repositories>
           <repository>
-              <id>papermc</id>
-              <url>https://repo.papermc.io/repository/maven-public/</url>
+              <id>{repo_id}</id>
+              <url>{repo_url}</url>
           </repository>
       </repositories>
       <dependencies>
           <dependency>
-              <groupId>io.papermc.paper</groupId>
-              <artifactId>paper-api</artifactId>
+              <groupId>{dep_group}</groupId>
+              <artifactId>{dep_artifact}</artifactId>
               <version>{api_version}-R0.1-SNAPSHOT</version>
               <scope>provided</scope>
           </dependency>
       </dependencies>
     </project>"""
+    
     with open(os.path.join(base_dir, "pom.xml"), "w") as f:
         f.write(pom_content)
 
-    # plugin.yml file generate karna
-    main_class = [f.filename[:-5] for f in java_files if f.filename.endswith('.java')][0] 
-    plugin_yml_content = f"name: {plugin_name}\nversion: 1.0\nmain: {package_name}.{main_class}\napi-version: '{api_version.rsplit('.', 1)[0]}'\n"
+    # Universal plugin.yml save karna (Direct UI se aaya hua)
     with open(os.path.join(resources_dir, "plugin.yml"), "w") as f:
         f.write(plugin_yml_content)
 
-    # Maven Build Command run karna (Updated Error Handling)
+    # Compile karna
     try:
         subprocess.run(["mvn", "clean", "package"], cwd=base_dir, check=True, capture_output=True)
     except subprocess.CalledProcessError as e:
-        shutil.rmtree(base_dir) # Agar compile fail ho toh kachra delete kar do
-        # stdout aur stderr dono ko combine karna taki pura error dikhe
+        shutil.rmtree(base_dir)
         error_msg = e.stdout.decode() + "\n" + e.stderr.decode()
-        return f"<h3>Compilation Failed! Code mein error hai:</h3><pre style='background:#1e1e1e; color:#ff5555; padding:10px; overflow-x: auto;'>{error_msg}</pre>", 500
+        return f"<h3 style='color:white; font-family:sans-serif;'>Compilation Failed! Error details:</h3><pre style='background:#1e1e1e; color:#ff5555; padding:15px; border-radius:8px; overflow-x:auto;'>{error_msg}</pre>", 500
 
-    # target folder se ban chuki .jar file uthana
+    # .jar file return karna
     target_dir = os.path.join(base_dir, "target")
     jar_file = None
     for file in os.listdir(target_dir):
@@ -92,7 +100,6 @@ def compile_plugin():
             jar_file = os.path.join(target_dir, file)
             break
 
-    # Plugin successfully ban gaya, ab direct download karwa do
     if jar_file:
         return send_file(jar_file, as_attachment=True)
     else:
@@ -100,6 +107,4 @@ def compile_plugin():
 
 if __name__ == '__main__':
     os.makedirs(BUILD_DIR, exist_ok=True)
-    # Direct port 80 par public IP ke sath run karna
     app.run(host='0.0.0.0', port=80)
-              
