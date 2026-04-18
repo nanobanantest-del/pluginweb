@@ -38,12 +38,19 @@ def compile_plugin():
         if file.filename.endswith('.java'):
             file.save(os.path.join(java_dir, file.filename))
 
-    # pom.xml file generate karna
+    # pom.xml file generate karna (Updated with Java 17 properties)
     pom_content = f"""<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
       <modelVersion>4.0.0</modelVersion>
       <groupId>{package_name}</groupId>
       <artifactId>{plugin_name}</artifactId>
       <version>1.0</version>
+      
+      <properties>
+          <maven.compiler.source>17</maven.compiler.source>
+          <maven.compiler.target>17</maven.compiler.target>
+          <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      </properties>
+
       <repositories>
           <repository>
               <id>papermc</id>
@@ -68,12 +75,14 @@ def compile_plugin():
     with open(os.path.join(resources_dir, "plugin.yml"), "w") as f:
         f.write(plugin_yml_content)
 
-    # Maven Build Command run karna
+    # Maven Build Command run karna (Updated Error Handling)
     try:
         subprocess.run(["mvn", "clean", "package"], cwd=base_dir, check=True, capture_output=True)
     except subprocess.CalledProcessError as e:
         shutil.rmtree(base_dir) # Agar compile fail ho toh kachra delete kar do
-        return f"<h3>Compilation Failed! Code mein error hai:</h3><pre style='background:#1e1e1e; color:red; padding:10px;'>{e.stderr.decode()}</pre>", 500
+        # stdout aur stderr dono ko combine karna taki pura error dikhe
+        error_msg = e.stdout.decode() + "\n" + e.stderr.decode()
+        return f"<h3>Compilation Failed! Code mein error hai:</h3><pre style='background:#1e1e1e; color:#ff5555; padding:10px; overflow-x: auto;'>{error_msg}</pre>", 500
 
     # target folder se ban chuki .jar file uthana
     target_dir = os.path.join(base_dir, "target")
@@ -93,3 +102,4 @@ if __name__ == '__main__':
     os.makedirs(BUILD_DIR, exist_ok=True)
     # Direct port 80 par public IP ke sath run karna
     app.run(host='0.0.0.0', port=80)
+              
