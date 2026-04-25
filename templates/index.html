@@ -3,165 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Plugin Compiler</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Universal Plugin Compiler</title>
     <style>
-        .hidden { display: none; }
-        /* Custom scrollbar for textarea */
-        textarea::-webkit-scrollbar { width: 8px; }
-        textarea::-webkit-scrollbar-track { background: #1f2937; }
-        textarea::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background-color: #2d2d2d;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 800px;
+        }
+        h2 {
+            text-align: center;
+            color: #4CAF50;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            background-color: #383838;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #4CAF50;
+        }
+        p.help-text {
+            font-size: 13px;
+            color: #aaaaaa;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            background-color: #2d2d2d;
+            border: 1px solid #555;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            background-color: #1e1e1e;
+            border: 1px solid #555;
+            border-radius: 5px;
+            color: #e6e6e6;
+            font-family: 'Courier New', Courier, monospace;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        button {
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white min-h-screen flex items-center justify-center p-4 sm:p-8 font-sans">
+<body>
 
-    <div class="bg-gray-800/80 backdrop-blur-lg p-6 sm:p-10 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-gray-700 w-full max-w-4xl">
+    <div class="container">
+        <h2>⚔️ Universal Plugin Compiler ⚔️</h2>
         
-        <div class="text-center mb-8">
-            <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 tracking-tight">Universal Compiler</h1>
-            <p class="text-gray-400 mt-2 text-sm">Build Spigot & Paper plugins instantly from any device.</p>
-        </div>
-        
-        <form id="compileForm" action="/compile" method="POST" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <form action="/compile" method="POST" enctype="multipart/form-data">
             
-            <div class="space-y-5">
-                <h2 class="text-xl font-semibold text-blue-400 border-b border-gray-700 pb-2">Plugin Settings</h2>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Plugin Name</label>
-                        <input type="text" name="plugin_name" required placeholder="HeppyCore" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-gray-100 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Java Version</label>
-                        <select name="java_version" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-100 outline-none">
-                            <option value="21">Java 21 (MC 1.20.5+)</option>
-                            <option value="17" selected>Java 17 (MC 1.18 - 1.20.4)</option>
-                            <option value="11">Java 11 (MC 1.13 - 1.17)</option>
-                            <option value="8">Java 8 (MC 1.8 - 1.12)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">API Type</label>
-                        <select name="api_type" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 text-gray-100 outline-none">
-                            <option value="paper">Paper API</option>
-                            <option value="spigot">Spigot API</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">MC Version</label>
-                        <input type="text" name="api_version" required placeholder="e.g. 1.20.4" value="1.20.4" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 text-gray-100 outline-none">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Package Name</label>
-                    <input type="text" name="package_name" required placeholder="com.heppysmp.core" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-100 outline-none">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Main Class Name</label>
-                    <input type="text" name="main_class" required placeholder="Main" value="Main" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-100 outline-none text-sm" title="Agar aapki file ka naam PluginCore.java hai, toh yahan PluginCore likhein">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Upload .Java Source Files</label>
-                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-600 border-dashed rounded-lg hover:border-blue-500 transition bg-gray-900/50">
-                        <div class="space-y-1 text-center">
-                            <svg class="mx-auto h-10 w-10 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                            <div class="flex text-sm text-gray-400 justify-center">
-                                <label for="file-upload" class="relative cursor-pointer bg-transparent rounded-md font-medium text-blue-400 hover:text-blue-300 focus-within:outline-none">
-                                    <span>Upload files</span>
-                                    <input id="file-upload" name="java_files" type="file" accept=".java" multiple required class="sr-only">
-                                </label>
-                            </div>
-                            <p class="text-xs text-gray-500">Multiple .java files allowed</p>
-                        </div>
-                    </div>
-                </div>
+            <div class="form-group">
+                <label for="java_files">1. Upload .java Files (Phase 1, 2, 3, 4 sabhi files yahan dalein):</label>
+                <input type="file" id="java_files" name="java_files" accept=".java" multiple required>
             </div>
 
-            <div class="space-y-5 flex flex-col">
-                <h2 class="text-xl font-semibold text-purple-400 border-b border-gray-700 pb-2">plugin.yml Configuration</h2>
-                <p class="text-xs text-gray-400">Yahan apne plugin ki config likhein (Commands, permissions, etc.). Version aur Main_Class backend khud add kar dega, par yahan likhna best practice hai.</p>
-                
-                <textarea name="plugin_yml_content" required class="flex-grow w-full px-4 py-3 bg-[#0d1117] border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 text-green-400 font-mono text-sm outline-none resize-none" rows="14">
-name: YourPluginName
-version: 1.0
-main: com.yourname.plugin.Main
-api-version: '1.20'
-
-# Apne commands yahan add karein
-commands:
-  examplecmd:
-    description: Yeh ek test command hai
-    usage: /examplecmd
-
-# Apni permissions yahan add karein
-permissions:
-  plugin.admin:
-    description: Admin access
-    default: op</textarea>
-
-                <button type="submit" class="w-full py-4 mt-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg transform hover:scale-[1.02] transition-all duration-200 uppercase tracking-widest">
-                    Compile & Download
-                </button>
+            <div class="form-group">
+                <label for="plugin_yml">2. Upload plugin.yml:</label>
+                <input type="file" id="plugin_yml" name="plugin_yml" accept=".yml,.yaml" required>
             </div>
+
+            <div class="form-group">
+                <label for="pom_extras">3. Custom Maven Dependencies (Optional):</label>
+                <p class="help-text">Agar Citizens ya Vault jaisa koi bahari API use kar rahe ho, toh unka &lt;repository&gt; aur &lt;dependency&gt; code yahan paste karo.</p>
+                <textarea id="pom_extras" name="pom_extras" rows="10" placeholder="<repositories>
+    <repository>
+        <id>citizens-repo</id>
+        <url>https://maven.citizensnpcs.co/repo</url>
+    </repository>
+</repositories>
+
+<dependencies>
+    <dependency>
+        <groupId>net.citizensnpcs</groupId>
+        <artifactId>citizens-main</artifactId>
+        <version>2.0.33-SNAPSHOT</version>
+        <scope>provided</scope>
+    </dependency>
+</dependencies>"></textarea>
+            </div>
+
+            <button type="submit" onclick="this.innerHTML='Compiling... Please wait!';">Compile & Download JAR</button>
             
         </form>
     </div>
 
-    <div id="loadingScreen" class="fixed inset-0 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center hidden z-50 transition-opacity">
-        <div class="relative w-24 h-24">
-            <div class="absolute inset-0 rounded-full border-t-4 border-blue-500 animate-spin"></div>
-            <div class="absolute inset-2 rounded-full border-r-4 border-purple-500 animate-spin direction-reverse" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
-            <div class="absolute inset-4 rounded-full border-b-4 border-green-500 animate-spin" style="animation-duration: 2s;"></div>
-        </div>
-        <h2 class="text-3xl font-bold text-white mt-8 tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Compiling Code...</h2>
-        <p class="text-gray-400 mt-3 max-w-md text-center animate-pulse">Running Maven dependencies. Yeh aapke server ke speed par depend karta hai.</p>
-    </div>
-
-    <script>
-        document.getElementById('compileForm').addEventListener('submit', function() {
-            document.getElementById('loadingScreen').classList.remove('hidden');
-            setTimeout(() => {
-                document.getElementById('loadingScreen').classList.add('hidden');
-            }, 9000); 
-        });
-
-        // Sync inputs for convenience
-        const pluginNameInput = document.querySelector('input[name="plugin_name"]');
-        const packageInput = document.querySelector('input[name="package_name"]');
-        const mainClassInput = document.querySelector('input[name="main_class"]');
-        const yamlEditor = document.querySelector('textarea[name="plugin_yml_content"]');
-
-        function updateYaml() {
-            const plugin = pluginNameInput.value || 'YourPluginName';
-            const pkg = packageInput.value || 'com.yourname.plugin';
-            const main = mainClassInput.value || 'Main';
-            
-            let lines = yamlEditor.value.split('\n');
-            lines[0] = `name: ${plugin}`;
-            
-            // Find and replace 'main:' line
-            for (let i = 0; i < lines.length; i++) {
-                if (lines[i].startsWith('main:')) {
-                    lines[i] = `main: ${pkg}.${main}`;
-                    break;
-                }
-            }
-            yamlEditor.value = lines.join('\n');
-        }
-
-        pluginNameInput.addEventListener('input', updateYaml);
-        packageInput.addEventListener('input', updateYaml);
-        mainClassInput.addEventListener('input', updateYaml);
-    </script>
 </body>
-                </html>
-                
+</html>
